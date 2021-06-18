@@ -1,0 +1,3 @@
+[submodule "benchmarks/STREAM"]
+	path = benchmarks/STREAM
+	url = git@github.com:jklinkenberg-benchmarks/STREAM.git
