@@ -4,3 +4,4 @@
 [submodule "benchmarks/lmbench"]
 	path = benchmarks/lmbench
 	url = https://github.com/jklinkenberg-benchmarks/lmbench.git
+    branch = main
