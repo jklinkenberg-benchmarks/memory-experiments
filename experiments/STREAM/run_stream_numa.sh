@@ -3,7 +3,7 @@
 # display hardware overview
 numactl -H
 
-# separator used for matrix output 
+# separator used for matrix output
 RES_SEP="\t"
 
 # build stream once
@@ -13,13 +13,13 @@ NTIMES=15 STREAM_ARRAY_SIZE=8000000 make stream.icc --directory=${STREAM_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
-CPU_DOMAINS=(${CPU_DOMAINS})
+CPU_DOMAINS=($(echo ${CPU_DOMAINS} | tr ' ' "\n"))
 N_CPU_DOMAINS=${#CPU_DOMAINS[@]}
 
 # get all memory domains
 MEM_DOMAINS="$(numactl -H | grep free | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
-MEM_DOMAINS=($MEM_DOMAINS)
-N_MEM_DOMAINS=${#CPU_DOMAINS[@]}
+MEM_DOMAINS=($(echo ${MEM_DOMAINS} | tr ' ' "\n"))
+N_MEM_DOMAINS=${#MEM_DOMAINS[@]}
 
 # initialize result matrices
 declare -A matrix_results_ser
