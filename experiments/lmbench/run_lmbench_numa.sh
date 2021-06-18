@@ -6,6 +6,8 @@ numactl -H
 # separator used for matrix output
 RES_SEP="\t"
 MAX_MEM=256
+#BENCH_EXE=lat_mem_rd
+BENCH_EXE=lat_mem_rd_specific
 
 # build benchmark once
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -46,12 +48,12 @@ do
         echo "Running test for CPU domain ${cpu_domain} and Memory domain ${mem_domain}"
         
         export RES_FILE="result_node_${cpu_domain}_mem_${mem_domain}_stride_8.log"
-        numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/lat_mem_rd -t -P 1 ${MAX_MEM} 8 &> ${RES_FILE}
+        numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} 8 &> ${RES_FILE}
         matrix_results_stride8[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')
         echo "Stride  8: ${matrix_results_stride8[$ctr_cpu,$ctr_mem]}"
 
         export RES_FILE="result_node_${cpu_domain}_mem_${mem_domain}_stride_16.log"
-        numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/lat_mem_rd -t -P 1 ${MAX_MEM} 16 &> ${RES_FILE}
+        numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} 16 &> ${RES_FILE}
         matrix_results_stride16[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')
         echo "Stride 16: ${matrix_results_stride16[$ctr_cpu,$ctr_mem]}"
 
