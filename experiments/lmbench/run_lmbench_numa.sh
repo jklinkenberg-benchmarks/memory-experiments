@@ -10,6 +10,7 @@ MAX_MEM=256
 # build benchmark once
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/lmbench"
+chmod -R u+x ${BENCH_DIR}/scripts
 make build --directory=${BENCH_DIR}
  
 # get all domains containing CPUs
