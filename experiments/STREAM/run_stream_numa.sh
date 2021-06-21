@@ -1,5 +1,9 @@
 #!/usr/local_rwth/bin/zsh
 
+echo "========================================"
+echo "===         Bandwidth Tests          ==="
+echo "========================================"
+
 # display hardware overview
 numactl -H
 
@@ -44,13 +48,13 @@ do
         echo "Running test for CPU domain ${cpu_domain} and Memory domain ${mem_domain}"
         
         export OMP_NUM_THREADS=1
-        export RES_FILE="result_node_${cpu_domain}_mem_${mem_domain}_seq.log"
+        export RES_FILE="result_bw_node_${cpu_domain}_mem_${mem_domain}_seq.log"
         numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
         matrix_results_ser[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep Triad | awk '{printf "%f", $2}')
         # echo "1 Threads: ${matrix_results_ser[$ctr_cpu,$ctr_mem]} MB/s"
 
         export OMP_NUM_THREADS=8
-        export RES_FILE="result_node_${cpu_domain}_mem_${mem_domain}_8threads.log"
+        export RES_FILE="result_bw_node_${cpu_domain}_mem_${mem_domain}_8threads.log"
         numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
         matrix_results_8t[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep Triad | awk '{printf "%f", $2}')
         # echo "8 Threads: ${matrix_results_8t[$ctr_cpu,$ctr_mem]} MB/s"
