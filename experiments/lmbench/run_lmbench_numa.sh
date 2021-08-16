@@ -4,8 +4,7 @@ echo "========================================"
 echo "===    Latency Tests (lmbench)       ==="
 echo "========================================"
 
-# N_STRIDES=(8 16 128)
-N_STRIDES=(8 16)
+N_STRIDES=(8 16 128)
 N_REP=3
 
 # display hardware overview
@@ -38,10 +37,10 @@ echo "Hardware has ${N_CPU_DOMAINS} CPU domains and ${N_MEM_DOMAINS} memory doma
 # initialize result matrices
 for cur_stride in "${N_STRIDES[@]}"
 do
-    declare -A matrix_results_stride_${cur_stride}
+    eval declare -A matrix_results_stride_${cur_stride}
     for ((i=1;i<=N_CPU_DOMAINS;i++)) do
         for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-            matrix_results_stride_${cur_stride}[${i},${j}]=0.0
+            eval "matrix_results_stride_${cur_stride}[${i},${j}]=0.0"
         done
     done
 done
@@ -58,12 +57,14 @@ do
         ctr_mem=1
         for mem_domain in "${MEM_DOMAINS[@]}"
         do
-            echo "Running test for stide ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
+            for rep in {1..${N_REP}}
+            do
+                echo "Running test for stide ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
             
-            export RES_FILE="result_lat_stride_${cur_stride}_node_${cpu_domain}_mem_${mem_domain}_rep_${}.log"
-            numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} 8 &> ${RES_FILE}
-            matrix_results_stride_${cur_stride}[${ctr_cpu},${ctr_mem}]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')
-
+                export RES_FILE="result_lat_stride_${cur_stride}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
+                eval "matrix_results_stride_${cur_stride}[${ctr_cpu},${ctr_mem}]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')"
+            done
             ctr_mem=$((ctr_mem+1))
         done
         ctr_cpu=$((ctr_cpu+1))
@@ -83,7 +84,9 @@ do
     for ((i=1;i<=N_CPU_DOMAINS;i++)) do
         echo -n -e "CPU-DOMAIN-$((i-1))${RES_SEP}"
         for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-            echo -n -e "${matrix_results_stride_${cur_stride}[${i},${j}]}${RES_SEP}"
+            tmp_val=$(echo "\${matrix_results_stride_${cur_stride}[${i},${j}]}")
+            tmp_val2=$(eval "echo ${tmp_val}")
+            echo -n -e "${tmp_val2}${RES_SEP}"
         done
         echo ""
     done
