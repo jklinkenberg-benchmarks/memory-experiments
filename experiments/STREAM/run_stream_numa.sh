@@ -4,8 +4,8 @@ echo "========================================"
 echo "===         Bandwidth Tests          ==="
 echo "========================================"
 
-# N_THREADS=(1 4 8 12 16 20 24 28 32 36 40 44 48)
-N_THREADS=(1 4 8 12 16 20 24 28 32 36 40)
+# N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20 22 24)
+N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20)
 N_REP=3
 
 # display hardware overview
@@ -15,9 +15,9 @@ numactl -H
 RES_SEP="\t"
 
 # build benchmark once
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-NTIMES=15 STREAM_ARRAY_SIZE=8000000 make stream.icc --directory=${BENCH_DIR}
+NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
@@ -36,9 +36,10 @@ for cpu_domain in "${CPU_DOMAINS[@]}"
 do    
     echo "---------------------------------------"
     echo "Domain: ${cpu_domain}"
+    
     for mem_domain in "${MEM_DOMAINS[@]}"
     do
-        for n_thr in "${N_THREADS[@]}"
+        for n_thr in "${N_THREADS_PER_DOMAIN[@]}"
         do
             for rep in {1..${N_REP}}
             do
@@ -48,6 +49,7 @@ do
                 export RES_FILE="result_bw_threads_${n_thr}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
                 numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
             done
+        done
     done
     echo "---------------------------------------"
 done

@@ -4,6 +4,10 @@ echo "========================================"
 echo "===           Latency Tests          ==="
 echo "========================================"
 
+# N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20 22 24)
+N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20)
+N_REP=3
+
 # display hardware overview
 numactl -H
 
@@ -11,9 +15,9 @@ numactl -H
 RES_SEP="\t"
 
 # build benchmark once
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-NTIMES=15 STREAM_ARRAY_SIZE=8000000 make latency.icc --directory=${BENCH_DIR}
+NTIMES=10 STREAM_ARRAY_SIZE=200000000 make latency.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
@@ -25,72 +29,27 @@ MEM_DOMAINS="$(numactl -H | grep free | awk '(NF>3) {printf "%d ", $2}' | sed 's
 MEM_DOMAINS=($(echo ${MEM_DOMAINS} | tr ' ' "\n"))
 N_MEM_DOMAINS=${#MEM_DOMAINS[@]}
 
-# initialize result matrices
-declare -A matrix_results_ser
-declare -A matrix_results_8t
-for ((i=1;i<=N_CPU_DOMAINS;i++)) do
-    for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-        matrix_results_ser[$i,$j]=0.0
-        matrix_results_8t[$i,$j]=0.0
-    done
-done
+echo "Hardware has ${N_CPU_DOMAINS} CPU domains and ${N_MEM_DOMAINS} memory domains"
 
 # run benchmark experiments
-ctr_cpu=1
 for cpu_domain in "${CPU_DOMAINS[@]}"
 do    
     echo "---------------------------------------"
     echo "Domain: ${cpu_domain}"
 
-    ctr_mem=1
     for mem_domain in "${MEM_DOMAINS[@]}"
     do
-        echo "Running test for CPU domain ${cpu_domain} and Memory domain ${mem_domain}"
-        
-        export OMP_NUM_THREADS=1
-        export RES_FILE="result_lat_node_${cpu_domain}_mem_${mem_domain}_seq.log"
-        numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/latency.omp.icc &> ${RES_FILE}
-        matrix_results_ser[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep Triad | awk '{printf "%f", $2}')
-        # echo "1 Threads: ${matrix_results_ser[$ctr_cpu,$ctr_mem]} MB/s"
-
-        #export OMP_NUM_THREADS=8
-        #export RES_FILE="result_node_${cpu_domain}_mem_${mem_domain}_8threads.log"
-        #numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/latency.omp.icc &> ${RES_FILE}
-        #matrix_results_8t[$ctr_cpu,$ctr_mem]=$(cat ${RES_FILE} | grep Triad | awk '{printf "%f", $2}')
-        # echo "8 Threads: ${matrix_results_8t[$ctr_cpu,$ctr_mem]} MB/s"
-
-        ctr_mem=$((ctr_mem+1))
+        for n_thr in "${N_THREADS_PER_DOMAIN[@]}"
+        do
+            for rep in {1..${N_REP}}
+            do
+                echo "Running test for ${n_thr} Threads -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
+                
+                export OMP_NUM_THREADS=${n_thr}
+                export RES_FILE="result_lat_threads_${n_thr}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/latency.omp.icc &> ${RES_FILE}
+            done
+        done
     done
-    ctr_cpu=$((ctr_cpu+1))
     echo "---------------------------------------"
-done
-
-echo "===== Serial Results ====="
-echo -n -e "${RES_SEP}"
-for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-    echo -n -e "MEM-DOMAIN-$((j-1))${RES_SEP}"
-done
-echo ""
-
-for ((i=1;i<=N_CPU_DOMAINS;i++)) do
-    echo -n -e "CPU-DOMAIN-$((i-1))${RES_SEP}"
-    for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-        echo -n -e "${matrix_results_ser[$i,$j]}${RES_SEP}"
-    done
-    echo ""
-done
-
-echo "===== 8 Thread Results ====="
-echo -n -e "${RES_SEP}"
-for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-    echo -n -e "MEM-DOMAIN-$((j-1))${RES_SEP}"
-done
-echo ""
-
-for ((i=1;i<=N_CPU_DOMAINS;i++)) do
-    echo -n -e "CPU-DOMAIN-$((i-1))${RES_SEP}"
-    for ((j=1;j<=N_MEM_DOMAINS;j++)) do
-        echo -n -e "${matrix_results_8t[$i,$j]}${RES_SEP}"
-    done
-    echo ""
 done
