@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import csv
 
 script_dir = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
-path_src_folder = "F:\\repos\\benchmarks\\memory-experiments-data\\2021-08-16_Leonide_no_numad\\result_numa"
+path_src_folder = "F:\\repos\\benchmarks\\memory-experiments-data\\2021-08-16_Leonide\\results_no-numad_1Mrd"
 
 class CFileMetaData():
 
@@ -24,23 +24,32 @@ class CFileMetaData():
         self.bw_add       = -1
         self.bw_triad     = -1
 
+        self.avg_time_copy      = -1
+        self.avg_time_scale     = -1
+        self.avg_time_add       = -1
+        self.avg_time_triad     = -1
+
         with open(file_path) as f: lines = [x.strip() for x in list(f)]
         for line in lines:
             if "Copy:" in line:
                 tmp_split = line.split()
                 self.bw_copy = float(tmp_split[1].strip())
+                self.avg_time_copy = float(tmp_split[2].strip())
                 continue
             if "Scale:" in line:
                 tmp_split = line.split()
                 self.bw_scale = float(tmp_split[1].strip())
+                self.avg_time_scale = float(tmp_split[2].strip())
                 continue
             if "Add:" in line:
                 tmp_split = line.split()
                 self.bw_add = float(tmp_split[1].strip())
+                self.avg_time_add = float(tmp_split[2].strip())
                 continue
             if "Triad:" in line:
                 tmp_split = line.split()
                 self.bw_triad = float(tmp_split[1].strip())
+                self.avg_time_triad = float(tmp_split[2].strip())
                 continue
 
 target_folder_data  = os.path.join(path_src_folder, "result_evaluation")
@@ -64,26 +73,35 @@ unique_cpu_nodes    = sorted(list(set([x.cpu_node for x in list_files])))
 unique_mem_nodes    = sorted(list(set([x.mem_node for x in list_files])))
 
 for metric in ['copy', 'scale', 'add', 'triad']:
-    target_file_path = os.path.join(target_folder_data, f"data_{metric}.csv")
-    with open(target_file_path, mode="w", newline='') as f:
-        writer = csv.writer(f, delimiter=';')        
-        for cpu_n in unique_cpu_nodes:
-            writer.writerow(["========== CPU-Domain " + str(cpu_n) + " =========="])
-            # write header
-            header = ['Threads']
-            for i in range(len(unique_mem_nodes)):
-                header.append("Mem-Domain " + str(unique_mem_nodes[i]))
-            writer.writerow(header)
-
-            for cur_thr in unique_n_threads:
-                tmp_arr_data = [np.nan for x in range(len(unique_mem_nodes))]
-                sub = [x for x in list_files if x.cpu_node == cpu_n and x.n_threads == cur_thr]
-
+    target_file_path_bw     = os.path.join(target_folder_data, f"data_bw_{metric}.csv")
+    target_file_path_time   = os.path.join(target_folder_data, f"data_time_{metric}.csv")
+    with open(target_file_path_bw, mode="w", newline='') as f_bw:
+        writer_bw = csv.writer(f_bw, delimiter=';')
+        with open(target_file_path_time, mode="w", newline='') as f_time:
+            writer_time = csv.writer(f_time, delimiter=';')
+            for cpu_n in unique_cpu_nodes:
+                writer_bw.writerow(     ["========== CPU-Domain " + str(cpu_n) + " =========="])
+                writer_time.writerow(   ["========== CPU-Domain " + str(cpu_n) + " =========="])
+                # write header
+                header = ['Threads']
                 for i in range(len(unique_mem_nodes)):
-                    cur_mem_domain = unique_mem_nodes[i]
-                    sub2 = [x for x in sub if x.mem_node == cur_mem_domain]
-                    if len(sub) > 0:
-                        tmp_arr_data[i] = eval(f"st.mean([x.bw_{metric} for x in sub2])")
-                # write to csv
-                writer.writerow([cur_thr] + tmp_arr_data)
-            writer.writerow([])
+                    header.append("Mem-Domain " + str(unique_mem_nodes[i]))
+                writer_bw.writerow(header)
+                writer_time.writerow(header)
+
+                for cur_thr in unique_n_threads:
+                    tmp_arr_data_bw     = [np.nan for x in range(len(unique_mem_nodes))]
+                    tmp_arr_data_time   = [np.nan for x in range(len(unique_mem_nodes))]
+                    sub = [x for x in list_files if x.cpu_node == cpu_n and x.n_threads == cur_thr]
+
+                    for i in range(len(unique_mem_nodes)):
+                        cur_mem_domain = unique_mem_nodes[i]
+                        sub2 = [x for x in sub if x.mem_node == cur_mem_domain]
+                        if len(sub) > 0:
+                            tmp_arr_data_bw[i] = eval(f"st.mean([x.bw_{metric} for x in sub2])")
+                            tmp_arr_data_time[i] = eval(f"st.mean([x.avg_time_{metric} for x in sub2])")
+                    # write to csv
+                    writer_bw.writerow([cur_thr] + tmp_arr_data_bw)
+                    writer_time.writerow([cur_thr] + tmp_arr_data_time)
+                writer_bw.writerow([])
+                writer_time.writerow([])
