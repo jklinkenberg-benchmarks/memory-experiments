@@ -17,7 +17,7 @@ RES_SEP="\t"
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
+READ_ONLY=0 NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"

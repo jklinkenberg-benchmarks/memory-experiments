@@ -1,6 +1,3 @@
-[submodule "benchmarks/STREAM"]
-	path = benchmarks/STREAM
-	url = https://github.com/jklinkenberg-benchmarks/STREAM.git
 [submodule "benchmarks/lmbench"]
 	path = benchmarks/lmbench
 	url = https://github.com/jklinkenberg-benchmarks/lmbench.git
