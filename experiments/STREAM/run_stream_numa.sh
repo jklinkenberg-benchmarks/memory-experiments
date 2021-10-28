@@ -7,7 +7,7 @@ echo "========================================"
 # N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20 22 24)
 # N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20)
 N_THREADS_PER_DOMAIN=(1 2 3 4 5 6 7 8 9 10 11 12)
-# N_THREADS_PER_DOMAIN=(8)
+#N_THREADS_PER_DOMAIN=(8)
 N_REP=3
 
 # display hardware overview
@@ -16,10 +16,13 @@ numactl -H
 # separator used for matrix output
 RES_SEP="\t"
 
+export READ_ONLY=${READ_ONLY:-0}
+export READ_ONLY_REDUCTION=${READ_ONLY_REDUCTION:-1}
+
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-READ_ONLY=0 READ_ONLY_REDUCTION=1 NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
+NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
