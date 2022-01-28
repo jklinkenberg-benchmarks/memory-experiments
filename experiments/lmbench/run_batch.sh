@@ -8,4 +8,13 @@ hostname
 module switch intel intel/19.1
 module list
 
-zsh ./run_lmbench_numa.sh
+RESULT_POSTFIX=${RESULT_POSTFIX:-""}
+RESULT_DIR=${RESULT_DIR:-"results_${RESULT_POSTFIX}"}
+
+# remember current directory
+CUR_DIR=$(pwd)
+
+# execute measurements
+mkdir ${RESULT_DIR} && cd ${RESULT_DIR}
+zsh ../run_lmbench_numa.sh
+cd ${CUR_DIR}

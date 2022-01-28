@@ -8,19 +8,23 @@ hostname
 module switch intel intel/19.1
 module list
 
+RESULT_POSTFIX=${RESULT_POSTFIX:-""}
+RESULT_DIR_NORMAL=${RESULT_DIR_NORMAL:-"results_${RESULT_POSTFIX}_normal"}
+RESULT_DIR_READ_ONLY=${RESULT_DIR_READ_ONLY:-"results_${RESULT_POSTFIX}_read-only"}
+
 # remember current directory
 CUR_DIR=$(pwd)
 
 # ===== normal STREAM =====
 export READ_ONLY=0
-mkdir results_normal && cd results_normal
+mkdir ${RESULT_DIR_NORMAL} && cd ${RESULT_DIR_NORMAL}
 zsh ../run_stream_numa.sh
 cd ${CUR_DIR}
 
 # ===== read-only STREAM =====
 export READ_ONLY=1
 export READ_ONLY_REDUCTION=1
-mkdir results_read-only && cd results_read-only
+mkdir ${RESULT_DIR_READ_ONLY} && cd ${RESULT_DIR_READ_ONLY}
 zsh ../run_stream_numa.sh
 
 # ===== Latency tests =====

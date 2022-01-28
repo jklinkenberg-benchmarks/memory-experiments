@@ -6,8 +6,12 @@ echo "========================================"
 
 # N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20 22 24)
 # N_THREADS_PER_DOMAIN=(1 2 4 6 8 10 12 14 16 18 20)
-N_THREADS_PER_DOMAIN=(1 2 3 4 5 6 7 8 9 10 11 12)
-#N_THREADS_PER_DOMAIN=(8)
+# N_THREADS_PER_DOMAIN=(8)
+# N_THREADS_PER_DOMAIN=(1 2 3 4 5 6 7 8 9 10 11 12)
+
+# make it possible to pass list of number of threads
+N_THREADS_PER_DOMAIN_STR=${N_THREADS_PER_DOMAIN_STR:-"1,2,3,4,5,6,7,8,9,10,11,12"}
+N_THREADS_PER_DOMAIN=($(echo ${N_THREADS_PER_DOMAIN_STR} | tr ',' "\n"))
 N_REP=3
 
 # display hardware overview
@@ -22,7 +26,7 @@ export READ_ONLY_REDUCTION=${READ_ONLY_REDUCTION:-1}
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-NTIMES=10 STREAM_ARRAY_SIZE=200000000 make stream.icc --directory=${BENCH_DIR}
+NTIMES=20 STREAM_ARRAY_SIZE=100000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
@@ -51,8 +55,11 @@ do
                 echo "Running test for ${n_thr} Threads -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
                 
                 export OMP_NUM_THREADS=${n_thr}
+                export OMP_PLACES=cores
+                export OMP_PROC_BIND=spread
+                export KMP_AFFINITY=verbose
                 export RES_FILE="result_bw_threads_${n_thr}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
-                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- no_numa_balancing ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
             done
         done
     done

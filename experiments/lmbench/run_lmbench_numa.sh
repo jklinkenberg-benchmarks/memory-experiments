@@ -62,7 +62,7 @@ do
                 echo "Running test for stide ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
             
                 export RES_FILE="result_lat_stride_${cur_stride}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
-                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- no_numa_balancing ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
                 eval "matrix_results_stride_${cur_stride}[${ctr_cpu},${ctr_mem}]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')"
             done
             ctr_mem=$((ctr_mem+1))
