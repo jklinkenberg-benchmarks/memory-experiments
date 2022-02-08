@@ -8,6 +8,8 @@ hostname
 module switch intel intel/19.1
 module list
 
+export N_THREADS_PER_DOMAIN_STR=${N_THREADS_PER_DOMAIN_STR:-"1,2,3,4,5,6,7,8,9,10,11,12"}
+
 RESULT_POSTFIX=${RESULT_POSTFIX:-""}
 RESULT_DIR_NORMAL=${RESULT_DIR_NORMAL:-"results_${RESULT_POSTFIX}_normal"}
 RESULT_DIR_READ_ONLY=${RESULT_DIR_READ_ONLY:-"results_${RESULT_POSTFIX}_read-only"}
