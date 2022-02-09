@@ -8,8 +8,9 @@ hostname
 module switch intel intel/19.1
 module list
 
-RESULT_POSTFIX=${RESULT_POSTFIX:-""}
-RESULT_DIR=${RESULT_DIR:-"results_${RESULT_POSTFIX}"}
+export RESULT_POSTFIX=${RESULT_POSTFIX:-""}
+export RESULT_DIR=${RESULT_DIR:-"results_${RESULT_POSTFIX}"}
+export EXE_SUFFIX=${RESULT_POSTFIX}
 
 # remember current directory
 CUR_DIR=$(pwd)

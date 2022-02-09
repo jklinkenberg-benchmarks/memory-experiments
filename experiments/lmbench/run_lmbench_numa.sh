@@ -15,12 +15,14 @@ RES_SEP="\t"
 MAX_MEM=256
 #BENCH_EXE=lat_mem_rd
 BENCH_EXE=lat_mem_rd_specific
+BENCH_EXE_W_SUFFIX=lat_mem_rd_specific_${EXE_SUFFIX}
 
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/lmbench"
 chmod -R u+x ${BENCH_DIR}/scripts
 make build --directory=${BENCH_DIR}
+cp ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE_W_SUFFIX}
  
 # get all domains containing CPUs
 CPU_DOMAINS="$(numactl -H | grep cpus | awk '(NF>3) {printf "%d ", $2}' | sed 's/.$//')"
@@ -62,7 +64,7 @@ do
                 echo "Running test for stide ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
             
                 export RES_FILE="result_lat_stride_${cur_stride}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
-                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- no_numa_balancing ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
                 eval "matrix_results_stride_${cur_stride}[${ctr_cpu},${ctr_mem}]=$(cat ${RES_FILE} | grep "${MAX_MEM}.000" | awk '{printf "%f", $2}')"
             done
             ctr_mem=$((ctr_mem+1))

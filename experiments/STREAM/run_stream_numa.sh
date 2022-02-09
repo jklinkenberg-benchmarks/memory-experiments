@@ -60,7 +60,7 @@ do
                 export OMP_PROC_BIND=spread
                 export KMP_AFFINITY=verbose
                 export RES_FILE="result_bw_threads_${n_thr}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
-                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc${EXE_EXT} &> ${RES_FILE}
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc${EXE_SUFFIX} &> ${RES_FILE}
             done
         done
     done
