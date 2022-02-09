@@ -26,7 +26,7 @@ export READ_ONLY_REDUCTION=${READ_ONLY_REDUCTION:-1}
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
-export EXE_EXT=${RESULT_POSTFIX}
+export EXE_SUFFIX=${RESULT_POSTFIX}
 NTIMES=20 STREAM_ARRAY_SIZE=100000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
