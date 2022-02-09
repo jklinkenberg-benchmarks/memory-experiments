@@ -26,6 +26,7 @@ export READ_ONLY_REDUCTION=${READ_ONLY_REDUCTION:-1}
 # build benchmark once
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/STREAM"
+export EXE_EXT=${RESULT_POSTFIX}
 NTIMES=20 STREAM_ARRAY_SIZE=100000000 make stream.icc --directory=${BENCH_DIR}
 
 # get all domains containing CPUs
@@ -59,7 +60,7 @@ do
                 export OMP_PROC_BIND=spread
                 export KMP_AFFINITY=verbose
                 export RES_FILE="result_bw_threads_${n_thr}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
-                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc &> ${RES_FILE}
+                numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/stream.omp.icc${EXE_EXT} &> ${RES_FILE}
             done
         done
     done
