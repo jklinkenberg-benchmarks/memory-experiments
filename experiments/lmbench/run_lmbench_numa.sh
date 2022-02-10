@@ -4,8 +4,9 @@ echo "========================================"
 echo "===    Latency Tests (lmbench)       ==="
 echo "========================================"
 
-N_STRIDES=(8 16 128)
-N_REP=3
+# N_STRIDES=(8 16 128)
+N_STRIDES=(64)
+N_REP=5
 
 # display hardware overview
 numactl -H
@@ -22,6 +23,7 @@ SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 BENCH_DIR="${SCRIPT_DIR}/../../benchmarks/lmbench"
 chmod -R u+x ${BENCH_DIR}/scripts
 make build --directory=${BENCH_DIR}
+# copy separate executable e.g. when multiple benchmarks running side by side
 cp ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE_W_SUFFIX}
  
 # get all domains containing CPUs
@@ -61,7 +63,7 @@ do
         do
             for rep in {1..${N_REP}}
             do
-                echo "Running test for stide ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
+                echo "Running test for stride ${cur_stride} -- CPU domain ${cpu_domain} and Memory domain ${mem_domain} -- Repetition ${rep}"
             
                 export RES_FILE="result_lat_stride_${cur_stride}_node_${cpu_domain}_mem_${mem_domain}_rep_${rep}.log"
                 numactl --cpunodebind=${cpu_domain} --membind=${mem_domain} -- ${BENCH_DIR}/bin/x86_64-linux-gnu/${BENCH_EXE} -t -P 1 ${MAX_MEM} ${cur_stride} &> ${RES_FILE}
