@@ -56,32 +56,30 @@ if __name__ == "__main__":
             list_files.append(file_meta)
 
     # get unique combinations
-    unique_sizes        = sorted(list(set([x.arr_size_mb for x in list_files])))
+    # unique_sizes        = sorted(list(set([x.arr_size_mb for x in list_files])))
     unique_cpu_nodes    = sorted(list(set([x.cpu_node for x in list_files])))
     unique_mem_nodes    = sorted(list(set([x.mem_node for x in list_files])))
 
     target_file_path    = os.path.join(args.destination, f"data_lat.csv")
     with open(target_file_path, mode="w", newline='') as f_lat:
         writer_lat = csv.writer(f_lat, delimiter=';')
+
+        # write header
+        header = ['']
+        for i in range(len(unique_mem_nodes)):
+            header.append("Mem-Domain " + str(unique_mem_nodes[i]))
+        writer_lat.writerow(header)
+        
         for cpu_n in unique_cpu_nodes:
-            writer_lat.writerow(["========== CPU-Domain " + str(cpu_n) + " =========="])
-            
-            # write header
-            header = ['Array Size']
+            tmp_arr     = [np.nan for x in range(len(unique_mem_nodes))]
+            sub         = [x for x in list_files if x.cpu_node == cpu_n]
+
             for i in range(len(unique_mem_nodes)):
-                header.append("Mem-Domain " + str(unique_mem_nodes[i]))
-            writer_lat.writerow(header)
-
-            for cur_size in unique_sizes:
-                tmp_arr     = [np.nan for x in range(len(unique_mem_nodes))]
-                sub         = [x for x in list_files if x.cpu_node == cpu_n and x.arr_size_mb == cur_size]
-
-                for i in range(len(unique_mem_nodes)):
-                    cur_mem_domain = unique_mem_nodes[i]
-                    sub2 = [x for x in sub if x.mem_node == cur_mem_domain]
-                    if len(sub) > 0:
-                        tmp_arr[i] = st.mean([x.latency for x in sub2])
-                
-                # write to csv
-                writer_lat.writerow([cur_size] + tmp_arr)
-            writer_lat.writerow([])
+                cur_mem_domain = unique_mem_nodes[i]
+                sub2 = [x for x in sub if x.mem_node == cur_mem_domain]
+                if len(sub) > 0:
+                    tmp_arr[i] = st.mean([x.latency for x in sub2])
+            
+            # write to csv
+            writer_lat.writerow(["CPU-Domain " + str(cpu_n)] + tmp_arr)
+        writer_lat.writerow([])
